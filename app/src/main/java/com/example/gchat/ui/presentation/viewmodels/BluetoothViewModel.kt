@@ -72,6 +72,14 @@ class BluetoothViewModel @Inject constructor(private val bluetoothStateReader: B
         }
     }
 
+    fun getMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            bluetoothStateReader.getMessages().collectLatest {
+                messages.emit(it)
+            }
+        }
+    }
+
     fun sendMessage(message: String) {
         bluetoothStateReader.sendMessage(message)
     }

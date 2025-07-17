@@ -18,12 +18,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.gchat.navigation.AppNavHost
 import com.example.gchat.ui.presentation.viewmodels.BluetoothViewModel
+import com.example.gchat.ui.presentation.viewmodels.ChatViewModel
 import com.example.gchat.ui.theme.GChatTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -35,7 +34,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             GChatTheme {
                 val viewModel: BluetoothViewModel = hiltViewModel()
-               MainScreen(viewModel)
+                val chatViewModel: ChatViewModel = hiltViewModel()
+               MainScreen(viewModel,chatViewModel)
             }
         }
     }
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: BluetoothViewModel){
+fun MainScreen(viewModel: BluetoothViewModel, chatViewModel: ChatViewModel){
     Scaffold(topBar = {
         TopAppBar(
             title = {
@@ -61,9 +61,10 @@ fun MainScreen(viewModel: BluetoothViewModel){
         )
     }) { padding ->
         AppNavHost(
+            modifier = Modifier.padding(padding),
             navController = rememberNavController(),
             viewModel = viewModel,
-            modifier = Modifier.padding(padding)
+            chatViewModel = chatViewModel
         )
     }
 }

@@ -9,5 +9,6 @@ data class ChatMessage(
     val senderDeviceAddress: String,
     val receiverDeviceAddress: String,
     val message: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val isMineMessage: Boolean = true
 )

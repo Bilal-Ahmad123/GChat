@@ -2,6 +2,7 @@ package com.example.gchat.ui.presentation.chat.chatscreen
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,24 +33,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.gchat.data.local.entities.ChatMessage
 import com.example.gchat.ui.presentation.viewmodels.BluetoothViewModel
+import com.example.gchat.ui.presentation.viewmodels.ChatViewModel
 
 @Composable
 @Preview
-fun ChatScreen(bluetoothViewModel: BluetoothViewModel,deviceId: String) {
+fun ChatScreen(
+    bluetoothViewModel: BluetoothViewModel,
+    chatViewModel: ChatViewModel,
+    deviceId: String
+) {
     val message by bluetoothViewModel.messages.collectAsState()
     val socketConnected by bluetoothViewModel.socketConnected.collectAsState()
-    val sampleMessages = mutableListOf(
-        ChatMessage(1, "user_1", "user_2", "Hey there!", 1620000000000),
-        ChatMessage(2, "user_2", "user_1", "Hi! How are you?", 1620000001000),
-        ChatMessage(3, "user_1", "user_2", "I'm good, just working on the project.", 1620000002000),
-        ChatMessage(4, "user_2", "user_1", "Sounds good. Need any help?", 1620000003000),
-        ChatMessage(5, "user_1", "user_2", "Maybe later. Thanks!", 1620000004000),
-        ChatMessage(6, "user_2", "user_1", "Cool. Ping me anytime.", 1620000005000),
-        ChatMessage(7, "user_1", "user_2", "Sure thing!", 1620000006000),
-        ChatMessage(8, "user_2", "user_1", "BTW, check the email I sent you.", 1620000007000),
-        ChatMessage(9, "user_1", "user_2", "Okay, will do.", 1620000008000),
-        ChatMessage(10, "user_2", "user_1", "Thanks 👍", 1620000009000)
-    )
+    val sampleMessages = remember {
+        mutableStateListOf<ChatMessage>()
+    }
     var inputText by remember { mutableStateOf("") }
 
     Column(
@@ -61,10 +58,9 @@ fun ChatScreen(bluetoothViewModel: BluetoothViewModel,deviceId: String) {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            reverseLayout = true
         ) {
             items(sampleMessages.size) { message ->
-                MessageBubble(sampleMessages[message].message)
+                MessageBubble(sampleMessages[message])
             }
         }
 
@@ -87,7 +83,26 @@ fun ChatScreen(bluetoothViewModel: BluetoothViewModel,deviceId: String) {
 
             IconButton(
                 onClick = {
-                    bluetoothViewModel.sendMessage("hello there")
+                    chatViewModel.insertMessage(
+                        ChatMessage(
+                            sampleMessages.count() + 1,
+                            "user_1",
+                            deviceId,
+                            message,
+                            System.currentTimeMillis()
+                        )
+                    )
+                    bluetoothViewModel.sendMessage(inputText)
+                    sampleMessages.add(
+                        ChatMessage(
+                            sampleMessages.count() + 1,
+                            "user_1",
+                            deviceId,
+                            inputText,
+                            System.currentTimeMillis()
+                        )
+                    )
+                    inputText = ""
                 }
             ) {
                 Icon(Icons.Default.Send, contentDescription = "Send")
@@ -96,37 +111,63 @@ fun ChatScreen(bluetoothViewModel: BluetoothViewModel,deviceId: String) {
     }
 
     LaunchedEffect(message) {
-        sampleMessages.add(ChatMessage(11, "user_1", "user_2", message, System.currentTimeMillis()))
+        Log.d("ChatScreen", message)
+        chatViewModel.insertMessage(
+            ChatMessage(
+                sampleMessages.count() + 1,
+                "user_1",
+                deviceId,
+                message,
+                System.currentTimeMillis(),
+                false
+            )
+        )
+        sampleMessages.add(
+            ChatMessage(
+                sampleMessages.count() + 1,
+                "user_1",
+                deviceId,
+                message,
+                System.currentTimeMillis(),
+                false
+            )
+        )
     }
 
     LaunchedEffect(Unit) {
-        sendSocketRequest(bluetoothViewModel,deviceId)
+        sendSocketRequest(bluetoothViewModel, deviceId)
+        bluetoothViewModel.getMessages()
     }
     LaunchedEffect(socketConnected) {
-        if(socketConnected){
+        if (socketConnected) {
             Log.d("ChatScreen", socketConnected.toString())
         }
     }
 }
 
-fun sendSocketRequest(bluetoothViewModel: BluetoothViewModel,deviceAddress: String) {
+fun sendSocketRequest(bluetoothViewModel: BluetoothViewModel, deviceAddress: String) {
     bluetoothViewModel.sendBluetoothRequest(deviceAddress)
 }
 
 
 @Composable
-fun MessageBubble(message: String) {
+fun MessageBubble(message: ChatMessage) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        horizontalArrangement = if (message.isMineMessage) Arrangement.End else Arrangement.Start
+
     ) {
         Box(
             modifier = Modifier
-                .background(Color.LightGray, shape = RoundedCornerShape(12.dp))
+                .background(
+                    if (message.isMineMessage) Color(0xFF87CEEB) else Color.LightGray,
+                    shape = RoundedCornerShape(12.dp)
+                )
                 .padding(12.dp)
         ) {
-            Text(text = message)
+            Text(text = message.message, color = Color.White)
         }
     }
 }

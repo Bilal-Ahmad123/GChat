@@ -16,4 +16,5 @@ interface BluetoothStateReader {
     fun listenMessages()
     fun getAlreadyPairedDevices(): Set<BluetoothDevice?>?
     fun sendMessage(message: String)
+    fun getMessages(): Flow<String>
 }

@@ -112,9 +112,10 @@ class BluetoothStateReaderImpl(context: Context) :BluetoothStateReader {
     }
 
     override fun listenMessages(){
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 var numBytes: Int
-                while (clientSocket!= null && clientSocket!!.isConnected) {
+                while (clientSocket != null && clientSocket!!.isConnected) {
                     numBytes = try {
                         mmInStream?.read(mmBuffer)
                     } catch (e: Exception) {
@@ -122,12 +123,14 @@ class BluetoothStateReaderImpl(context: Context) :BluetoothStateReader {
                     }!!
                     val message = String(mmBuffer, 0, numBytes)
                     if (message.isNotEmpty()) {
+                        messages.emit(message)
                         Log.d("BluetoothStateReaderImpl", "Received message: $message")
                     }
                 }
             } catch (exp: Exception) {
                 Log.d("BluetoothStateReaderImpl", "Input stream was disconnected", exp)
             }
+        }
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -143,6 +146,10 @@ class BluetoothStateReaderImpl(context: Context) :BluetoothStateReader {
         catch (exp: Exception){
             Log.d("BluetoothStateReaderImpl", "Output stream was disconnected", exp)
         }
+    }
+
+    override fun getMessages(): Flow<String> {
+        return messages
     }
 
 
