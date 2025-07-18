@@ -17,4 +17,6 @@ class ChatManagerImpl(private val chatDao: ChatDao) : ChatManager {
 
     override suspend fun getSenders(): List<String> =
         chatDao.getSenders()
+    override suspend fun getAllMessages(): List<ChatMessage> =
+        chatDao.getAllMessages()
 }

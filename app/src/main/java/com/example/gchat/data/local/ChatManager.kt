@@ -6,4 +6,5 @@ interface ChatManager {
     suspend fun insertMessage(message: ChatMessage)
     suspend fun getMessagesBetweenUsers( senderAddress: String): List<ChatMessage>
     suspend fun getSenders(): List<String>
+    suspend fun getAllMessages(): List<ChatMessage>
 }

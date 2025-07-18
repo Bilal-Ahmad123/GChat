@@ -44,6 +44,9 @@ fun ChatScreen(
 ) {
     val message by bluetoothViewModel.messages.collectAsState()
     val socketConnected by bluetoothViewModel.socketConnected.collectAsState()
+    val messages by chatViewModel.messages.collectAsState()
+    val allMessages by chatViewModel.allMessages.collectAsState()
+
     val sampleMessages = remember {
         mutableStateListOf<ChatMessage>()
     }
@@ -85,21 +88,19 @@ fun ChatScreen(
                 onClick = {
                     chatViewModel.insertMessage(
                         ChatMessage(
-                            sampleMessages.count() + 1,
-                            "user_1",
-                            deviceId,
-                            message,
-                            System.currentTimeMillis()
+                            senderDeviceAddress = "user_1",
+                            receiverDeviceAddress = deviceId,
+                            message = inputText,
+                            timestamp = System.currentTimeMillis(),
                         )
                     )
                     bluetoothViewModel.sendMessage(inputText)
                     sampleMessages.add(
                         ChatMessage(
-                            sampleMessages.count() + 1,
-                            "user_1",
-                            deviceId,
-                            inputText,
-                            System.currentTimeMillis()
+                            senderDeviceAddress = "user_1",
+                            receiverDeviceAddress = deviceId,
+                            message = inputText,
+                            timestamp = System.currentTimeMillis(),
                         )
                     )
                     inputText = ""
@@ -114,22 +115,20 @@ fun ChatScreen(
         Log.d("ChatScreen", message)
         chatViewModel.insertMessage(
             ChatMessage(
-                sampleMessages.count() + 1,
-                "user_1",
-                deviceId,
-                message,
-                System.currentTimeMillis(),
-                false
+                senderDeviceAddress = "user_1",
+                receiverDeviceAddress = deviceId,
+                message = message,
+                timestamp = System.currentTimeMillis(),
+                isMineMessage = false
             )
         )
         sampleMessages.add(
             ChatMessage(
-                sampleMessages.count() + 1,
-                "user_1",
-                deviceId,
-                message,
-                System.currentTimeMillis(),
-                false
+                senderDeviceAddress = "user_1",
+                receiverDeviceAddress = deviceId,
+                message = message,
+                timestamp = System.currentTimeMillis(),
+                isMineMessage = false
             )
         )
     }
@@ -137,12 +136,17 @@ fun ChatScreen(
     LaunchedEffect(Unit) {
         sendSocketRequest(bluetoothViewModel, deviceId)
         bluetoothViewModel.getMessages()
+        chatViewModel.getMessagesBetweenUsers(deviceId)
+        chatViewModel.getAllMessages()
     }
-    LaunchedEffect(socketConnected) {
-        if (socketConnected) {
-            Log.d("ChatScreen", socketConnected.toString())
+
+    LaunchedEffect(messages) {
+        Log.d("ChatScreen", messages.toString())
+        messages?.forEach {
+            sampleMessages.add(it)
         }
     }
+
 }
 
 fun sendSocketRequest(bluetoothViewModel: BluetoothViewModel, deviceAddress: String) {

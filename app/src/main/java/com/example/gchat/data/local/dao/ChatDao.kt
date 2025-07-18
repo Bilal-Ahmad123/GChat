@@ -15,4 +15,7 @@ interface ChatDao {
 
     @Query("Select DISTINCT senderDeviceAddress from chat_messages")
     fun getSenders(): List<String>
+
+    @Query("Select * from chat_messages")
+    fun getAllMessages(): List<ChatMessage>
 }
